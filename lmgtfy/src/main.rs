@@ -1,4 +1,3 @@
-use std::io;
 use std::env;
 use std::error::Error;
 use serde_json::Value;
@@ -12,7 +11,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let bitly_api_key = match env::var("BITLY_API") {
         Ok(r) => r,
         Err(_) => {
-            println!("No \"BITLY_API\" environmental variable defined.");
+            println!("lmgtfy: Let Me Google That For You");
+            println!();
+            println!("Error:");
+            println!("\tNo \"BITLY_API\" environmental variable defined.");
+            println!();
+            println!("Solution:");
+            println!("\tGet a Bit.ly API Key and then set this as an environmental variable with \
+            \"BITLY_API\" as the key.");
             exit(1);
         }
     };
@@ -21,12 +27,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
 
-    let mut full_str = if args.is_empty() { String::new() } else { args.join(" ") };
     if args.is_empty() {
-        println!("You did not provide any command line arguments. Please type your query here.");
-        io::stdin().read_line(&mut full_str)?;
+        println!("lmgtfy: Let Me Google That For You");
+        println!();
+        println!("Usage:");
+        println!("\tlmgtfy <query>");
+        println!();
+        println!("Examples:");
+        println!("\tlmgtfy Where get good moon cake in sf");
+        return Ok(());
     }
 
+    let full_str: String = args.join(" ");
     let url_to_bitly = format!("https://letmegooglethat.com/?q={}", encode_string(full_str.as_str()));
     let client = reqwest::Client::new();
 
@@ -39,20 +51,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .send()
         .await?;
 
+    // Get status since .json() consumes the response, thus "dropping" ownership of the response
     let status_code = res.status();
-    println!("LMGTFY Link: {}", url_to_bitly);
+    println!("- LMGTFY Link: {}", url_to_bitly);
 
     let json: Value = res.json().await?;
     if !status_code.is_success() {
-        println!("Bit.ly: N/A (Failed w/ Status Code: {}).", status_code);
+        println!("- Bit.ly Link: N/A (Failed w/ Status Code: {}).", status_code);
         println!("\tError: {}", json.to_string());
         return Ok(());
     }
 
     let link = json["link"].as_str();
     match link {
-        Some(s) => println!("Bit.ly: {}", s),
-        None => println!("Bit.ly: N/A (Error)")
+        Some(s) => println!("- Bit.ly Link: {}", s),
+        None => println!("- Bit.ly Link: N/A (Error)")
     };
 
     return Ok(());
