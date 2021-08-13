@@ -20,9 +20,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     (args.join(" ") as String)
         .chars()
+        // Do we need to use "String" or will "char" suffice?
         .map(|x| x.to_string())
-        .collect::<Vec<_>>()
-        .iter()
         .for_each(|x| {
             spoiler_str.push_str(format!("||{}||", x).as_str());
         });
