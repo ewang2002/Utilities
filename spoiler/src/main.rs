@@ -16,18 +16,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let mut spoiler_str = String::new();
-
-    (args.join(" ") as String)
+    let spoiler_str: String = (args.join(" ") as String)
         .chars()
-        // Do we need to use "String" or will "char" suffice?
-        .map(|x| x.to_string())
-        .for_each(|x| {
-            spoiler_str.push_str(format!("||{}||", x).as_str());
-        });
+        .map(|x| format!("||{}||", x))
+        .collect::<Vec<_>>()
+        .join("");
 
-    println!("{}", spoiler_str);
-    println!();
     println!("{} Characters", spoiler_str.len());
+    println!();
+    println!("{}", spoiler_str);
     return Ok(());
 }
