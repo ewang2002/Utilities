@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .split_ascii_whitespace()
         .map(|x| OsStr::new(x))
         .collect::<Vec<_>>();
-    let ext_to_check = opts.files_to_check
+    let ext_to_check = opts.extensions_to_check
         .split_ascii_whitespace()
         .map(|x| OsStr::new(x))
         .collect::<Vec<_>>();
@@ -80,7 +80,7 @@ struct Opts {
     dirs_to_ignore: String,
 
     #[clap(short('c'), long("check"), default_value = "")]
-    files_to_check: String,
+    extensions_to_check: String,
 }
 
 
