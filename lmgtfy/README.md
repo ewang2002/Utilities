@@ -2,13 +2,6 @@
 A small utility program that takes in a query and prints a **L**et **M**e **G**oogle **T**hat **F**or **Y**ou link *and* 
 a Bit.ly link. Useful when your friends ask a question that can easily be asked on Google.
 
-## Building
-Assuming you installed [Rust](https://www.rust-lang.org/tools/install), run the following in your CLI:
-```
-cargo build --release
-```
-The release executable will be put in `target/release`.
-
 ## Setup
 This assumes a Windows OS. Steps may differ for Linux or Mac.
 
