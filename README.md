@@ -1,15 +1,27 @@
 # Utilities
-A series of utility programs that I've made for random reasons. 
+A series of utility/random programs that I've made for, well, random reasons. 
 
-These are designed to be *small* programs. Instead of creating a repository for each program, I've decided to condense them into one repository.
+These are designed to be *small* projects, usually not worthy of having its own repository. Thus, instead of creating a repository for each project, I've decided to condense them into one repository.
 
-## Current Utilities
-- `lmgtfy`: A utility program that takes in a query and prints a **L**et **M**e **G**oogle **T**hat **F**or **Y**ou link *and* a Bit.ly link (to hide the LMGTFY link).
-- `spongebob`: A utility program that takes in a string and prints out the SpOnGeBoB-fOrMaTtEd TeXt VeRsIoN. 
-- `spoiler`: A utility program that takes in a string and prints out the same string with the spoiler markdown for each character (supported by Discord).
-- `tlc`: A small utility program that gets the **t**otal **l**ine **c**ount all files in the current directory (and sub-directories).
+A description of each program can be found in the associated folder.
 
-I'll make and add more utility programs to this repository when needed.
+## Building & Setup
+Most of the projects I have will follow a very similar building/setup process. They are explained below. For projects which require slightly more advanced setup, those instructions will be made available in the corresponding project's README.
+
+### Building
+Assuming you installed [Rust](https://www.rust-lang.org/tools/install), run the following in your CLI:
+```
+cargo build --release
+```
+The release executable will be put in `target/release`.
+
+### Setup
+This assumes a Windows OS. Steps may differ for Linux or Mac.
+
+1. Make sure you get the release build of this executable. See the previous section for more information.
+2. Put the executable (from step 1) into a folder (preferably containing other executables/utilities). Then, in your
+   user environmental variables, put the path to this folder under the variable `PATH`.
+3. You should be able to access the executable from the CLI.
 
 ## License
-All utility programs are released under the MIT license.
+All projects here are made available under the MIT license.
