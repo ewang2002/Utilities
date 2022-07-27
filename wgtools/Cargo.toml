@@ -9,3 +9,8 @@ edition = "2021"
 clap = { version = "3.1.8", features = ["derive"] }
 webweg = { git = "https://github.com/ewang2002/webweg", branch = "stable" }
 tokio = { version = "1.17.0", features = ["macros"] }
+
+[profile.release]
+strip = true
+lto = true
+panic = "abort"

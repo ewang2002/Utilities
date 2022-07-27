@@ -78,7 +78,7 @@ async fn export_all_sections(w: &WebRegWrapper<'_>) {
                     c.subj_course_id,
                     c.section_code,
                     c.section_id,
-                    c.instructor.join(" & "),
+                    c.all_instructors.join(" & "),
                     c.total_seats,
                     meeting_str
                 )
@@ -190,7 +190,7 @@ async fn main() {
 
     parsed_term.push_str(&term[2..]);
 
-    let wrapper = WebRegWrapper::new(cookies, &parsed_term);
+    let wrapper = WebRegWrapper::new(webweg::reqwest::Client::new(), cookies, &parsed_term);
     if !wrapper.is_valid().await {
         eprintln!("An error occurred when trying to ");
         return;
