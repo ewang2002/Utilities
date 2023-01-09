@@ -4,8 +4,8 @@ use std::fs::OpenOptions;
 use std::io::{stdin, BufWriter, Write};
 use std::path::Path;
 use tokio::time::Instant;
-use webweg::webreg_clean_defn::MeetingDay;
-use webweg::webreg_wrapper::{SearchRequestBuilder, SearchType, WebRegWrapper};
+use webweg::types::MeetingDay;
+use webweg::wrapper::{SearchRequestBuilder, SearchType, WebRegWrapper};
 
 const MIN_YEAR: usize = 22;
 const MAX_YEAR: usize = 24;
@@ -15,7 +15,7 @@ const TSV_HEADER: &str = "subj_course_id\tsec_code\tsec_id\tinstructor\ttotal_se
 ///
 /// # Parameters
 /// - `w`: The `WebRegWrapper` reference.
-async fn export_all_sections(w: &WebRegWrapper<'_>) {
+async fn export_all_sections(w: &WebRegWrapper) {
     let file_name = format!("{}.tsv", w.get_term());
     let mut writer = BufWriter::new(
         OpenOptions::new()
@@ -52,25 +52,30 @@ async fn export_all_sections(w: &WebRegWrapper<'_>) {
             .unwrap_or_default()
             .into_iter()
             .for_each(|c| {
-                let meeting_str = c.meetings.into_iter().map(|m| {
-                    let day_meet = match &m.meeting_days {
-                        MeetingDay::Repeated(r) => r.join(""),
-                        MeetingDay::OneTime(r) => r.to_string(),
-                        MeetingDay::None => "N/A".to_string(),
-                    };
+                let meeting_str = c
+                    .meetings
+                    .into_iter()
+                    .map(|m| {
+                        let day_meet = match &m.meeting_days {
+                            MeetingDay::Repeated(r) => r.join(""),
+                            MeetingDay::OneTime(r) => r.to_string(),
+                            MeetingDay::None => "N/A".to_string(),
+                        };
 
-                    format!(
-                        "{},{},{}:{:02} - {}:{:02},{} {}",
-                        m.meeting_type,
-                        day_meet,
-                        m.start_hr,
-                        m.start_min,
-                        m.end_hr,
-                        m.end_min,
-                        m.building,
-                        m.room,
-                    )
-                }).collect::<Vec<_>>().join("|");
+                        format!(
+                            "{},{},{}:{:02} - {}:{:02},{} {}",
+                            m.meeting_type,
+                            day_meet,
+                            m.start_hr,
+                            m.start_min,
+                            m.end_hr,
+                            m.end_min,
+                            m.building,
+                            m.room,
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("|");
 
                 writeln!(
                     writer,
@@ -106,7 +111,7 @@ async fn export_all_sections(w: &WebRegWrapper<'_>) {
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Whether to provide the cookie string manually. If this is not provided, then it is
-    /// assumed that there is a `cookie.txt` file in the directory that this executbale is in.
+    /// assumed that there is a `cookie.txt` file in the directory that this executable is in.
     #[clap(short, long)]
     cookie: bool,
 
@@ -132,16 +137,14 @@ async fn main() {
     let mut cookies = String::new();
     if args.cookie {
         println!("Please paste your cookies now.");
-        match stdin().read_line(&mut cookies) {
-            Err(e) => {
-                eprintln!(
-                    "An error occurred when trying to read from standard input: {}",
-                    e
-                );
-                return;
-            }
-            _ => {}
-        };
+        if let Err(e) = stdin().read_line(&mut cookies) {
+            eprintln!(
+                "An error occurred when trying to read from standard input: {}",
+                e
+            );
+
+            return;
+        }
 
         cookies = cookies.trim().to_string();
     } else {
@@ -157,7 +160,7 @@ async fn main() {
     // Parse choice
     let choice = match args.data.to_lowercase().as_str() {
         "sections" => SelectedChoice::Sections,
-        "Schedule" => SelectedChoice::Schedule,
+        "schedule" => SelectedChoice::Schedule,
         _ => {
             eprintln!("Only 'sections' or 'schedule' can be requested at this time.");
             return;
@@ -178,7 +181,7 @@ async fn main() {
     }
 
     let yr = term[2..].parse::<usize>().unwrap_or_default();
-    if yr < MIN_YEAR || yr > MAX_YEAR {
+    if !(MIN_YEAR..=MAX_YEAR).contains(&yr) {
         eprintln!(
             "Year {} not supported; year must be less than {} and greater than {}.",
             &term[2..],
@@ -192,12 +195,14 @@ async fn main() {
 
     let wrapper = WebRegWrapper::new(webweg::reqwest::Client::new(), cookies, &parsed_term);
     if !wrapper.is_valid().await {
-        eprintln!("An error occurred when trying to ");
+        eprintln!("An error occurred when trying to authenticate. Please try again with a new set of cookies.");
         return;
     }
 
     match choice {
         SelectedChoice::Sections => export_all_sections(&wrapper).await,
-        SelectedChoice::Schedule => {}
-    }
+        SelectedChoice::Schedule => {
+            eprintln!("'schedule' is not supported at this time.");
+        }
+    };
 }
