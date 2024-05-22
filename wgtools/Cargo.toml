@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
-webweg = "0.7.1"
 tokio = { version = "1.17.0", features = ["macros"] }
+webweg = "0.9.1"
 
 [profile.release]
 strip = true

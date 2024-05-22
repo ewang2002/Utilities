@@ -5,18 +5,19 @@ use std::io::{stdin, BufWriter, Write};
 use std::path::Path;
 use tokio::time::Instant;
 use webweg::types::MeetingDay;
-use webweg::wrapper::{SearchRequestBuilder, SearchType, WebRegWrapper};
+use webweg::wrapper::input_types::{SearchRequestBuilder, SearchType};
+use webweg::wrapper::WebRegWrapper;
 
 const MIN_YEAR: usize = 22;
-const MAX_YEAR: usize = 24;
+const MAX_YEAR: usize = 32;
 const TSV_HEADER: &str = "subj_course_id\tsec_code\tsec_id\tinstructor\ttotal_seats\tmeetings";
 
 /// Puts all sections offered for a term into a TSV file.
 ///
 /// # Parameters
 /// - `w`: The `WebRegWrapper` reference.
-async fn export_all_sections(w: &WebRegWrapper) {
-    let file_name = format!("{}.tsv", w.get_term());
+async fn export_all_sections(w: &WebRegWrapper, term: &str) {
+    let file_name = format!("{term}.tsv");
     let mut writer = BufWriter::new(
         OpenOptions::new()
             .write(true)
@@ -28,7 +29,9 @@ async fn export_all_sections(w: &WebRegWrapper) {
     writeln!(writer, "{}", TSV_HEADER).unwrap();
 
     let results = match w
-        .search_courses(SearchType::Advanced(&SearchRequestBuilder::new()))
+        .req(term)
+        .parsed()
+        .search_courses(SearchType::Advanced(SearchRequestBuilder::new()))
         .await
     {
         Ok(o) => o,
@@ -47,7 +50,9 @@ async fn export_all_sections(w: &WebRegWrapper) {
             res.course_code.trim()
         );
         let mut added = 0;
-        w.get_course_info(res.subj_code.trim(), res.course_code.trim())
+        w.req(term)
+            .parsed()
+            .get_course_info(res.subj_code.trim(), res.course_code.trim())
             .await
             .unwrap_or_default()
             .into_iter()
@@ -193,14 +198,23 @@ async fn main() {
 
     parsed_term.push_str(&term[2..]);
 
-    let wrapper = WebRegWrapper::new(webweg::reqwest::Client::new(), cookies, &parsed_term);
+    let wrapper = WebRegWrapper::builder()
+        .with_cookies(cookies)
+        .try_build_wrapper()
+        .unwrap();
+
     if !wrapper.is_valid().await {
         eprintln!("An error occurred when trying to authenticate. Please try again with a new set of cookies.");
         return;
     }
 
+    if let Err(e) = wrapper.associate_term(&parsed_term).await {
+        eprintln!("An error occurred when trying to associate the term: {e}");
+        return;
+    }
+
     match choice {
-        SelectedChoice::Sections => export_all_sections(&wrapper).await,
+        SelectedChoice::Sections => export_all_sections(&wrapper, &parsed_term).await,
         SelectedChoice::Schedule => {
             eprintln!("'schedule' is not supported at this time.");
         }
